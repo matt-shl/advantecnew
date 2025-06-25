@@ -31,6 +31,6 @@ manually:
 2. Download the packages from your Azure Artifacts feed and place them under
    `azure-artifacts/DTNL-Dotnet-Feed`.
 
-The build pipeline uses `nuget.config` which references the Azure Artifacts feed
-directly, so these local packages are optional when the pipeline has access to
-the feed.
+The `nuget.config` file includes this directory as a package source so local
+restores work even without network access. When the pipeline can reach the
+Azure Artifacts feed it will prefer the remote source.

@@ -1,0 +1,54 @@
+trigger:
+- main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  buildConfiguration: Release
+
+stages:
+- stage: Build
+  jobs:
+  - job: Backend
+    displayName: Build Umbraco
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        version: '9.x'
+    - task: NuGetAuthenticate@1
+      inputs:
+        nuGetServiceConnections: 'DTNL-Dotnet-Feed'
+    - task: DotNetCoreCLI@2
+      displayName: Restore
+      inputs:
+        command: 'restore'
+        projects: 'Advantec.Cms/Advantec.Cms.csproj'
+        feedsToUse: config
+        nugetConfigPath: 'nuget.config'
+    - task: DotNetCoreCLI@2
+      displayName: Publish
+      inputs:
+        command: 'publish'
+        publishWebProjects: false
+        projects: 'Advantec.Cms/Advantec.Cms.csproj'
+        arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/cms'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)/cms'
+        artifactName: 'cms'
+  - job: Frontend
+    displayName: Build Next.js
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '20.x'
+    - script: |
+        cd frontend
+        npm install
+        npm run build
+      displayName: 'npm install and build'
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: 'frontend/.next'
+        artifactName: 'nextjs'
